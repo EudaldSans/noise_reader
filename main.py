@@ -12,6 +12,8 @@ fig, ax = plt.subplots()
 timestamp = list()
 instant_noise = list()
 smoothed_noise = list()
+avg_noise = list()
+noise_threshold = list()
 
 data_lock = Lock()
 
@@ -35,6 +37,8 @@ def main():
             timestamp.append(time)
             instant_noise.append(stp)
             smoothed_noise.append(noise_level)
+            # avg_noise.append(stp_avg)
+            noise_threshold.append(noise_level*1.35)
             # print(f'{xs=} {ys=}')
 
         # print(f'{timestamp=} {stp=}, {stp_avg=}, {noise_level=}')
@@ -43,24 +47,30 @@ def main():
 
 
 def animate(frame):
-    global timestamp, instant_noise, smoothed_noise, data_lock
-    max_samples = 200
+    global timestamp, instant_noise, smoothed_noise, data_lock, avg_noise, noise_threshold
+    max_samples = 500
 
     with data_lock:
         timestamp = timestamp[-max_samples:]
         instant_noise = instant_noise[-max_samples:]
         smoothed_noise = smoothed_noise[-max_samples:]
+        # avg_noise = avg_noise[-max_samples:]
+        noise_threshold = noise_threshold[-max_samples:]
 
     # Draw x and y lists
     ax.clear()
     ax.plot(timestamp, instant_noise, color='b', label='instant noise')
     ax.plot(timestamp, smoothed_noise, color='r', label='smoothed noise')
+    # ax.plot(timestamp, avg_noise, color = 'g', label='avg_noise')
+    ax.plot(timestamp, noise_threshold, color='r', linestyle='--', label='noise threshold')
 
     # Format plot
     plt.xticks(rotation=45, ha='right')
     plt.subplots_adjust(bottom=0.30)
-    plt.title('Instant noise vs averaged noise')
-    plt.ylabel('Temperature (deg C)')
+    plt.title('Instant noise vs smoothed noise')
+    plt.ylabel('STP')
+    plt.legend()
+    plt.tight_layout()
 
     print(f'{frame=}: {timestamp}, {instant_noise}, {smoothed_noise}')
 
@@ -72,4 +82,5 @@ if __name__ == '__main__':
     my_thread.start()
 
     ani = animation.FuncAnimation(fig=fig, func=animate, interval=100)
+    plt.legend()
     plt.show()
